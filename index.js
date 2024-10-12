@@ -15,7 +15,6 @@ connectToDatabase();
 
 // Start application
 const app = express();
-const port = 3000;
 
 app.use(express.json());
 
@@ -42,11 +41,8 @@ app.post('/login', async (req,res)=>{
       console.log("The password is incorrect");
       return res.status(400).send({message: "Login incorrect!"})
     }
-
-    const token = authService.generateToken(user, SECRET_KEY);
-    console.log(user);
   
-    res.status(200).send({user, token});  
+    res.status(200).send(user);  
   } catch (error) {
     console.log("Error in login: "+ error);
     res.status(500).send("Internal error. Try again later");
@@ -83,7 +79,4 @@ app.get('/validate', (req, res) => {
   })
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running at: http://localhost:${port}`);
-});
+module.exports = app;

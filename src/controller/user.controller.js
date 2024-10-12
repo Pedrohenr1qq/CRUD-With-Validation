@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 
 // Internal Requires
 const userService = require('../service/user.service');
+const authService = require('../service/auth.service');
+
+// key to create token by JWT
+const SECRET_KEY = "6708726fe28c04b61fa833e8";
 
 // Functions to CRUD
 
@@ -17,7 +21,10 @@ const findUserById = async (req, res) => {
     
     found = (user != null);
 
-    if(found) return res.send(user);
+    if(found) {
+      console.log('User found!');
+      return res.send(user);
+    }
     else return res.status(404).send({message: "User not found"});
 
   } catch (error) {
@@ -33,16 +40,22 @@ const findAllUsers = async (req, res) => {
 // CREATE
 const createUser = async (req, res) => {
   const user = req.body;
+  try {
+    if(Object.keys(user).length === 0) return res.status(400).send({message: "The body request is null"})
 
-  if(Object.keys(user).length === 0) return res.status(400).send({message: "The body request is null"})
+    if(!user.name) return res.status(400).send({message: "The name field is null"});
+    if(!user.email) return res.status(400).send({message: "The email field is null"});
+    if(!user.password) return res.status(400).send({message: "The password field is null"});
+  
+    user.token = authService.generateToken(user, SECRET_KEY);
+  
+    console.log("New user created!");
+    return res.status(201).send(await userService.createUser(user, SECRET_KEY));
 
-  if(!user.name) return res.status(400).send({message: "The name field is null"});
-  if(!user.email) return res.status(400).send({message: "The email field is null"});
-  if(!user.password) return res.status(400).send({message: "The password field is null"});
-
-  console.log("New user registered!");
-  return res.status(201).send(await userService.createUser(user));
-
+  } catch (error) { 
+    console.log("Error in create a new user: "+error);
+    res.status(500).send({message: "Internal Error. Try again later"});
+  } 
 }
 
 // UPDATE
@@ -62,7 +75,11 @@ const updateUser = async (req, res) => {
 
     found = (userUpdated != null);
 
-    if(found)res.send(userUpdated);
+    if(found){
+      console.log("User updated!");
+      return res.send(userUpdated);
+    }
+
     else return res.status(404).send({message: "User not found"});
 
   } catch (error) {
@@ -80,7 +97,10 @@ const deleteUser = async (req, res) => {
 
     found = (userDelete != null);
 
-    if(found)res.send(userDelete);
+    if(found) {
+      console.log('User deleted!');
+      return res.send(userDelete);
+    }
     else return res.status(404).send({message: "User not found"});
   } catch (error) {
     console.log(`Error in try update user by id: ${error}`);
